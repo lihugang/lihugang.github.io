@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+
+<head>
+    <!--Metadata-->
+    <meta charset="UTF-8" />
+    <title>主页 | lihugang的博客</title>
+    <!-- Standard page module-->
+    <!-- Copyright:lihugang@outlook.com-->
+    <!--LICENSE: AGPL 3.0-->
+    <!--Import javascript-->
+    <script src="javascript/common.js"></script>
+    <script src="javascript/display.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/localforage/1.9.0/localforage.min.js"></script>
+    <!--Import CSS-->
+    <link rel="stylesheet" href="css/common.css">
+    <!--End module-->
+    <!--@ Comment-->
+    <comment data=' @ Parser:PageComment { title: "主页 | lihugang的博客", import_js:[ ], import_css:[ ], content: "source/html/index.html" } '></comment>
+    LoadComment(false);
+</head>
+
+<body>
+    <div id=title><span id=blog-author onclick="javascript:location.href='/';">lihugang的博客</span><span id=article-list onclick="javascript:window.open('/articleList', '_blank');">文章列表</span><span id=message-box onclick="javascript:window.open('/service/messageBox', '_blank');">留言区</span>
+        <span id="about-me" onclick="javascript:window.open('/about','_blank');">关于lihugang</span>
+    </div>
+    <div id=container>
+        <span class=subtitle><strong>推荐文章</strong></span><br>
+        <span class=details>这里还没有任何内容哦~</span><br><br>
+        <span class=subtitle><strong>资源分享</strong></span><br>
+        <span class=details>这里还没有任何内容哦~</span><br><br>
+        <span class=subtitle><strong>GitHub项目</strong></span><br>
+        <span class=details>这里还没有任何内容哦~</span><br><br>
+        <span class=subtitle><strong>友情链接</strong></span><br>
+        <span class=details>这里还没有任何内容哦~</span><br><br>
+        <span class=subtitle><strong>联系我们</strong></span><br>
+        <span class=details>邮箱：lihugang@outlook.com<br>
+        微信号：NULPointer<br>
+        留言区 <a href=/service/messageBox>Click here</a></span><br><br>
+        <br><br><br>
+        <div id=copyright>
+            <hr>版权所有 &copy; lihugang@outlook.com<br>本站所有文章、代码均采用AGPL 3.0协议
+        </div>
+    </div>
+    <div class=hide-links>
+        <a href=/articleList>文章列表</a>
+        <a href=/service/messageBox>留言区</a>
+        <a href=/about>关于lihugang</a>
+    </div>
+</body>

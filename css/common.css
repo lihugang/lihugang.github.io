@@ -1,0 +1,75 @@
+body {
+    font-family: Cursive, Helvetica, sans-serif;
+    white-space: pre-wrap;
+    background-image: url(https://shenzilong.cn/util/redirect_to_bing_daily_picture_address)
+}
+
+#title {
+    position: fixed;
+    top: 0%;
+    left: 0%;
+    width: 100%;
+    background-color: #adefef
+}
+
+#blog-author {
+    font-size: 24px;
+    cursor: pointer;
+    position: absolute;
+    left: 0px;
+    top: 5px;
+}
+
+#article-list {
+    font-size: 24px;
+    cursor: pointer;
+    position: absolute;
+    left: 20%;
+    top: 10px;
+    border: 2px solid #000000;
+    border-radius: 5px;
+}
+
+#message-box {
+    font-size: 24px;
+    cursor: pointer;
+    position: absolute;
+    left: 40%;
+    top: 10px;
+    border: 2px solid #000000;
+    border-radius: 5px;
+}
+
+#about-me {
+    font-size: 24px;
+    cursor: pointer;
+    position: absolute;
+    right: 20px;
+    top: 10px;
+    border: 2px solid #000000;
+    border-radius: 5px;
+}
+
+#container {
+    background: #ffefd5;
+    width: 100%;
+    height: 100%;
+    border: 3px solid #48d1cc;
+    border-radius: 20px;
+    text-align: left;
+}
+
+#copyright {
+    text-align: center;
+    color: yellow;
+    position: fixed;
+    bottom: 0%;
+}
+
+.hide-links {
+    display: none
+}
+
+.subtitle {
+    font-size: 1.4em
+}
