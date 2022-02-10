@@ -1,0 +1,86 @@
+<!--
+ * @Author          : lihugang
+ * @Date            : 2022-02-10 12:23:20
+ * @LastEditTime    : 2022-02-10 18:26:46
+ * @LastEditors     : lihugang
+ * @Description     : Pig White Board
+ * @FilePath        : c:\program\whiteboard\pwb.html
+ * Copyright (c) lihugang
+ * 长风破浪会有时 直挂云帆济沧海
+ * There will be times when the wind and waves break, and the sails will be hung straight to the sea.
+ *  * * * 
+ * 是非成败转头空 青山依旧在 几度夕阳红
+ * Whether it's right or wrong, success or failure, it's all empty now, and it's all gone with the passage of time. The green hills of the year still exist, and the sun still rises and sets.
+-->
+<html>
+
+<head>
+    <title>WhiteBoard</title>
+    <meta charset="UTF-8" />
+</head>
+
+<body>
+    Pen Color <input type="color" id="color" value="#000000"> Size <input type="number" id=size value="4"> <button onclick=javascript:clearCanvas();>Clear</button><br>
+    <canvas id=canvas></canvas>
+</body>
+<script>
+    window.drawing = false;
+    window.pen_info = {
+        color: "#000000",
+        size: 4
+    };
+
+    var pre_pw = 0;
+    var pre_ph = 0;
+
+    setInterval(function () {
+        //Set Canvas Size
+        var page_width = document.body.clientWidth;
+        var page_height = document.body.clientHeight;
+
+        if (page_width !== pre_pw && page_height !== pre_ph) {
+            document.querySelector("#canvas").height = (page_height - 45);
+            document.querySelector("#canvas").width = (page_width - 24);
+            pre_pw = page_width;
+            pre_ph = page_height;
+            ctx.fillText("By Pig WhiteBoard",5,20);
+            ctx.fillText("lihugang.github.io/tools/pwb",10,40);
+        };
+        document.querySelector("#canvas").style.border = "1px solid";
+    }, 500);
+
+    var ctx = document.querySelector("#canvas").getContext("2d");
+
+    document.querySelector("#canvas").onmousedown = function () {
+        window.drawing = true;
+        //Mark: Start Drawing
+    };
+    document.querySelector("#canvas").onmouseup = function () {
+        window.drawing = false;
+        //Mark: End Drawing
+    };
+    document.querySelector("#canvas").onmousemove = function (e) {
+        if (window.drawing) {
+            var group = [e.layerX, e.layerY, window.pen_info.size, window.pen_info.size];
+            var diff = window.pen_info.size / 2;
+            group[0] -= Math.ceil(diff);
+            group[1] -= Math.ceil(diff);
+            ctx.fillRect(group[0], group[1], group[2], group[3]);
+        };
+    };
+
+    function clearCanvas(){
+        pre_pw = 0;
+        pre_ph = 0;
+    };
+
+    document.querySelector("#color").onchange = function(){
+        window.pen_info.color = document.querySelector("#color").value;
+        ctx.fillStyle = window.pen_info.color;
+    };
+    document.querySelector("#size").onchange = function(){
+        window.pen_info.size = document.querySelector("#size").value;
+    }
+</script>
+
+</html>
