@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+
+<head>
+    <title>The Math Editor For Photos(MEP)</title>
+    <style>
+        .body {
+            margin: 0;
+        }
+
+        .title {
+            font-size: 2em;
+        }
+    </style>
+    <script src="./vue3.js" defer></script>
+    <script>
+        var userConfig = {};
+        try {
+            userConfig = JSON.parse(localStorage.getItem('.meprc') || '{}');
+        } catch (e) {
+
+        };
+        document.addEventListener('DOMContentLoaded', () => {
+            Vue.createApp({
+                data() {
+                    return {
+                        color: userConfig.color || '#ff0000',
+                        size: userConfig.size || 12,
+                        macros: userConfig.macros || {},
+                        new_key: '',
+                        new_value: '',
+                    }
+                },
+                methods: {
+                    deleteMacro(key) {
+                        this.macros[key] = undefined;
+                        this.macros = JSON.parse(JSON.stringify(this.macros));
+                    },
+                    addMacro(key, value) {
+                        this.macros[key] = value;
+                        this.new_key = '', this.new_value = '';
+                    },
+                    saveConfig() {
+                        localStorage.setItem('.meprc', JSON.stringify({
+                            color: this.color,
+                            size: this.size,
+                            macros: this.macros
+                        }));
+                    }
+                }
+            }).mount('body');
+        });
+
+    </script>
+</head>
+
+<body>
+    <span class="title">Settings</span><br>
+    Project location: <a href="https://github.com/lihugang/the-Math-Editor-for-photos"
+        target="_blank">https://github.com/lihugang/the-Math-Editor-for-photos</a>
+    <br />
+    Default color: <input type="color" v-model="color"><br />
+    Default font size: <input type="number" v-model="size"><br />
+    Macros: <ul>
+        <template v-for="(value,key) in macros" key="value">
+            <li>
+                {{ key }} - {{ value }}
+                &nbsp;&nbsp;
+                <button @click="deleteMacro(key)">Delete</button>
+            </li>
+            <br />
+        </template>
+        <li>
+            <input type="text" v-model="new_key" placeholder="Your new macro" id="new_macro_key">
+            <input type="text" v-model="new_value" placeholder="The macro's content" id="new_macro_value"
+                @keydown.enter="addMacro(new_key, new_value)">
+            <button @click="addMacro(new_key, new_value)">Add</button>
+        </li>
+    </ul><br />
+    <button @click="saveConfig">Save the config</button>
+</body>

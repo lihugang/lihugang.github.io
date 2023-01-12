@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+
+<head>
+    <title>The Math Editor For Photos(MEP)</title>
+    <style>
+        .body {
+            margin: 0;
+        }
+
+        .operation {
+            position: fixed;
+            overflow-y: scroll;
+            overflow-x: scroll;
+            top: 0%;
+            left: 0%;
+            width: 100%;
+            height: 120px;
+        }
+
+        .image {
+            position: fixed;
+            top: 120px;
+            left: 0%;
+            width: 100%;
+            height: calc(100% - 120px);
+            overflow-y: scroll;
+            z-index: -1;
+        }
+
+        .mark {
+            position: absolute;
+        }
+
+        .mark[active="true"] {
+            z-index: 3;
+        }
+
+        .mark[active="false"] {
+            z-index: 2;
+        }
+
+        .edit-mark-region {
+            background-color: whitesmoke;
+        }
+    </style>
+    <link rel="stylesheet" href="./katex/katex.min.css">
+    <script src="./vue3.js" defer></script>
+    <script src="./katex/katex.min.js" defer></script>
+    <script src="./html2canvas.js" defer></script>
+    <script>
+        var userConfig = {};
+        try {
+            userConfig = JSON.parse(localStorage.getItem('.meprc') || '{}');
+        } catch (e) {
+
+        };
+        document.addEventListener('DOMContentLoaded', () => {
+            Vue.createApp({
+                data() {
+                    return {
+                        filename: 'unknown',
+                        marks: [],
+                        activeMark: '',
+                        color: userConfig.color || '#ff0000',
+                        size: userConfig.size || 12,
+                        image: {
+                            url: '',
+                            blob: '',
+                            path: ''
+                        },
+                        multiLine: false
+                    }
+                },
+                methods: {
+                    reRender() {
+                        const marks = Vue.toRaw(this.marks);
+                        this.$nextTick(() => {
+                            this.marks = [];
+                            this.$nextTick(() => {
+                                this.marks = marks;
+                            });
+                        });
+                    },
+                    loadImage($event) {
+                        const file = $event.target.files[0];
+                        if (!file.name.endsWith('.imm')) {
+                            this.image.blob = file;
+                            this.image.path = file.path;
+                            this.image.url = window.URL.createObjectURL(this.image.blob);
+                            this.marks = [];
+                            this.reRender();
+                        } else {
+                            const reader = new FileReader();
+                            reader.readAsText(file);
+                            reader.onload = () => {
+                                try {
+                                    const json = JSON.parse(reader.result);
+                                    fetch(json.image).then(image => image.blob()).then(blob => {
+                                        this.image.blob = blob;
+                                        blob.name = json.filename;
+                                        this.image.path = file.path;
+                                        this.image.url = window.URL.createObjectURL(this.image.blob);
+                                        this.marks = json.marks;
+                                        this.reRender();
+                                    }).catch(err => {
+                                        alert('The file is broken');
+                                    })
+                                } catch (err) {
+                                    alert('Unknown file or it is broken');
+                                }
+                            }
+                        };
+                    },
+                    getImageSize() {
+                        return {
+                            height: window.innerHeight - 120,
+                            width: window.innerWidth
+                        };
+                    },
+                    createMark($event) {
+                        if (!this.image.blob) return alert('You must import an image');
+                        this.marks.push({
+                            content: '',
+                            pos: {
+                                x: $event.layerX / this.getImageSize().width,
+                                y: $event.layerY / this.getImageSize().height
+                            },
+                            color: Vue.toRaw(this.color),
+                            size: Vue.toRaw(this.size),
+                            id: Math.random().toString(36).substring(2)
+                        });
+                        this.activeMark = this.marks.at(-1).id;
+                        this.$nextTick(() => {
+                            document.getElementById(this.marks.at(-1).id).focus();
+                        });
+                    },
+                    getMarkPosition(item) {
+                        return {
+                            top: parseInt(120 + item.pos.y * this.getImageSize().height),
+                            left: parseInt(item.pos.x * this.getImageSize().width)
+                        }
+                    },
+                    renderLatex(str) {
+                        // const mathContents = str.match(/\$.*?\$/g);
+                        const mathContents = str.split('\n');
+                        if (!mathContents) return str;
+                        for (let i = 0; i < mathContents.length; i++) {
+                            // console.log(mathContents[i]);
+                            mathContents[i] = katex.renderToString(mathContents[i], {
+                                strict: 'ignore',
+                                throwOnError: false,
+                                macros: userConfig.macros || {}
+                            });
+                        }
+                        return mathContents.join('<br />');
+                    },
+                    editMark(item) {
+                        this.activeMark = item.id;
+                        this.$nextTick(() => {
+                            document.getElementById(item.id).focus();
+                        });
+                    },
+                    saveMark(item) {
+                        if (this.activeMark === item.id) this.activeMark = '';
+                        this.marks = this.marks.filter(mark => !!mark.content.length);
+                    },
+                    closeWindow() {
+                        window.close();
+                    },
+                    newWindow() {
+                        window.open('index.html', '_blank', `height=${window.outerHeight},width=${window.outerWidth}`)
+                        //window.require('electron').ipcRenderer.send('newWindow-main');
+                    },
+                    openSettingsPage() {
+                        window.open('setting.html', '_blank', `height=${window.outerHeight},width=${window.outerWidth}`)
+
+                        //window.require('electron').ipcRenderer.send('newWindow-setting');
+                    },
+                    exportImage(type) {
+                        if (type === 'original') {
+                            const a = document.createElement('a');
+                            a.href = this.image.url;
+                            a.download = this.image.blob.name;
+                            a.click();
+                        };
+                        if (type === 'imm') {
+                            if (this.image.blob) {
+                                const reader = new FileReader();
+                                reader.readAsDataURL(this.image.blob);
+                                reader.onload = () => {
+                                    const json = {
+                                        image: reader.result,
+                                        marks: Vue.toRaw(this.marks),
+                                        filename: this.image.blob.name
+                                    };
+                                    const blob = new Blob([JSON.stringify(json)], { type: 'image/imm' });
+                                    const url = window.URL.createObjectURL(blob);
+                                    const a = document.createElement('a');
+                                    a.href = url;
+                                    const suffix = this.image.blob.name.split('.').at(-1);
+                                    a.download = this.image.blob.name.replaceAll('.' + suffix, '.imm');
+                                    a.click();
+
+                                };
+                            } else alert('You must import an image');
+                        };
+                        if (type === 'edit') {
+                            if (this.image.blob) {
+                                const activeMark = Vue.toRaw(this.activeMark);
+                                this.activeMark = '';
+                                (async () => {
+                                    const imgs = await Promise.all(this.marks.map(mark => this.markToImage(mark)));
+
+                                    const img = new Image();
+                                    img.src = this.image.url;
+                                    img.onload = () => {
+                                        const canvas = document.createElement('canvas');
+                                        canvas.height = img.height;
+                                        canvas.width = img.width;
+                                        const ctx = canvas.getContext('2d');
+                                        ctx.drawImage(img, 0, 0);
+                                        imgs.forEach((img, index) => {
+                                            const mark = this.marks[index];
+                                            ctx.drawImage(img, parseInt(mark.pos.x * canvas.width), parseInt(mark.pos.y * canvas.height));
+                                        });
+
+                                        const url = canvas.toDataURL('image/png');
+                                        const a = document.createElement('a');
+                                        a.href = url;
+                                        const suffix = this.image.blob.name.split('.').at(-1);
+                                        a.download = this.image.blob.name.replaceAll('.' + suffix, '.png');
+                                        a.click();
+
+                                        this.activeMark = activeMark;
+                                    };
+                                })();
+                            } else alert('You must import an image');
+                        };
+                    },
+                    markToImage(item) {
+                        return new Promise((resolve, reject) => {
+                            html2canvas(document.getElementById(item.id + '.container'), {
+                                backgroundColor: null,
+                            }).then((canvas) => {
+                                const url = canvas.toDataURL('image/png');
+                                const img = new Image();
+                                img.src = url;
+                                img.onload = () => resolve(img);
+                                img.onerror = reject;
+                            });
+                        });
+                    }
+                },
+                mounted() {
+                    window.addEventListener('resize', () => {
+                        this.reRender();
+                    })
+                }
+            }).mount('body');
+        });
+
+    </script>
+</head>
+
+<body>
+    <div class="operation">
+        Filename: {{ filename }}
+        <input type="file" accept="image/*, .imm" @change="loadImage($event)">
+        &nbsp; Project location: <a href="https://github.com/lihugang/the-Math-Editor-for-photos"
+            target="_blank">https://github.com/lihugang/the-Math-Editor-for-photos</a>
+        <br />
+        Color: <input type="color" v-model="color"> Size: <input type="number" v-model="size" style="width: 32px">
+        &nbsp;
+        <button @click="openSettingsPage">Open settings page</button>
+        <br />
+        <button @click="exportImage('original')">Export original image</button> &nbsp; <button
+            @click="exportImage('imm')">Export imm file</button> &nbsp; <button @click="exportImage('edit')">Export
+            image</button>
+        <br />
+        <button @click="newWindow">New window</button> &nbsp; <button @click="closeWindow">Close without saving</button>
+        &nbsp; <input type="checkbox" v-model="multiLine">Multi Line Mode
+    </div>
+    <div class="marks">
+        <template v-for="item in marks">
+            <div class="mark"
+                :style="{ top: getMarkPosition(item).top + 'px', left: getMarkPosition(item).left + 'px' }"
+                :content="item.content" :active="item.id === activeMark" :id="item.id + '.container'">
+                <div v-if="item.id !== activeMark" v-html="renderLatex(item.content)" @click="editMark(item)"
+                    class="mark-display" :style="{'font-size': item.size + 'px', color: item.color }">
+                </div>
+                <div v-else class="edit-mark-region" @blur="saveMark(item)">
+                    <span v-if="!multiLine">
+                        <input type="text" v-model="item.content" @keydown.enter="saveMark(item)" autofocus
+                            :id="item.id" placeholder="Press enter to close">
+                    </span>
+                    <span v-else>
+                        <textarea v-model="item.content" @keydown.ctrl.enter="saveMark(item)" autofocus :id="item.id"
+                            placeholder="Press ctrl+enter to close"></textarea>
+                    </span>
+                    <br />
+                    <div v-html="renderLatex(item.content)"
+                        :style="{'font-size': item.size + 'px', color: item.color }"></div>
+                    <div><button @click="item.color = this.color">Update color</button><button
+                            @click="item.size = this.size">Update size</button></div>
+                </div>
+            </div>
+        </template>
+    </div>
+    <img class="image" :src="image.url" @click="createMark">
+</body>
